@@ -63,7 +63,7 @@ class RSIHeatmapScheduler:
                 else:
                     logging.warning(f"No data for {stock}")
             except Exception as e:
-                logging.error(f"Error fetching data for {stock}: {e}")
+                logging.error(f"Error fetching data for {stock}: {e}", exc_info=True)  # Log the stack trace
 
         # Convert to DataFrame for plotting
         rsi_df = pd.DataFrame.from_dict(rsi_data, orient='index', columns=['RSI'])
@@ -99,11 +99,14 @@ class RSIHeatmapScheduler:
             await self.application.bot.send_photo(chat_id=self.chat_id, photo=open('rsi_heatmap.png', 'rb'))
             logging.info("Heatmap sent to Telegram")
         except Exception as e:
-            logging.error(f"Error sending heatmap to Telegram: {e}")
+            logging.error(f"Error sending heatmap to Telegram: {e}", exc_info=True)  # Log the stack trace
 
     def generate_and_send_heatmap(self):
-        self.generate_heatmap()
-        asyncio.run(self.send_heatmap_to_telegram())
+        try:
+            self.generate_heatmap()
+            asyncio.run(self.send_heatmap_to_telegram())
+        except Exception as e:
+            logging.error(f"Error in generate_and_send_heatmap: {e}", exc_info=True)  # Log the stack trace
 
     def schedule_jobs(self):
         schedule.every(30).minutes.do(self.generate_and_send_heatmap)
@@ -113,8 +116,11 @@ class RSIHeatmapScheduler:
         self.generate_and_send_heatmap()  # Run immediately once at start
         self.schedule_jobs()
         while True:
-            schedule.run_pending()
-            time.sleep(1)
+            try:
+                schedule.run_pending()
+                time.sleep(1)
+            except Exception as e:
+                logging.error(f"Error in run_scheduler: {e}", exc_info=True)  # Log the stack trace
 
 if __name__ == "__main__":
     scheduler = RSIHeatmapScheduler()
