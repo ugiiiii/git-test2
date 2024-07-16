@@ -11,7 +11,8 @@ import logging
 import asyncio
 from telegram import Bot
 from telegram.ext import Application
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 import os
 
 # Use Agg backend for Matplotlib to avoid GUI issues
@@ -103,11 +104,19 @@ class RSIHeatmapScheduler:
             logging.error(f"Error sending heatmap to Telegram: {e}", exc_info=True)  # Log the stack trace
 
     def generate_and_send_heatmap(self):
-        try:
-            self.generate_heatmap()
-            asyncio.run(self.send_heatmap_to_telegram())
-        except Exception as e:
-            logging.error(f"Error in generate_and_send_heatmap: {e}", exc_info=True)  # Log the stack trace
+        # 미국 주식 시장 운영 시간 확인
+        now = datetime.now(pytz.timezone('Asia/Seoul'))
+        market_open = now.replace(hour=22, minute=30, second=0, microsecond=0)
+        market_close = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        
+        if market_open <= now < market_close:
+            try:
+                self.generate_heatmap()
+                asyncio.run(self.send_heatmap_to_telegram())
+            except Exception as e:
+                logging.error(f"Error in generate_and_send_heatmap: {e}", exc_info=True)  # Log the stack trace
+        else:
+            logging.info("Market is closed. Skipping RSI update.")
 
     def schedule_jobs(self):
         schedule.every(30).minutes.do(self.generate_and_send_heatmap)
