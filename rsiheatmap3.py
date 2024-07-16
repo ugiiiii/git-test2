@@ -12,6 +12,7 @@ import asyncio
 from telegram import Bot
 from telegram.ext import Application
 from datetime import datetime
+import os
 
 # Use Agg backend for Matplotlib to avoid GUI issues
 matplotlib.use('Agg')
@@ -20,7 +21,7 @@ matplotlib.use('Agg')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='rsi_heatmap.log', filemode='a')
 
 class RSIHeatmapScheduler:
-    def __init__(self, config_path='config.json', stocks_path='stocks.json'):
+    def __init__(self, config_path='../config.json', stocks_path='../stocks.json'):
         self.load_config(config_path)
         self.load_stocks(stocks_path)
         self.application = Application.builder().token(self.telegram_bot_token).build()
