@@ -112,7 +112,10 @@ class RSIHeatmapScheduler:
         if market_open <= now < market_close:
             try:
                 self.generate_heatmap()
-                asyncio.run(self.send_heatmap_to_telegram())
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self.send_heatmap_to_telegram())
+                loop.close()
             except Exception as e:
                 logging.error(f"Error in generate_and_send_heatmap: {e}", exc_info=True)  # Log the stack trace
         else:
